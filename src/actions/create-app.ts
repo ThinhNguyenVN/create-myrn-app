@@ -1,0 +1,199 @@
+import path from 'node:path'
+
+import chalk from 'chalk'
+import degit from 'degit'
+
+import { runCommand } from '../utils/command'
+import { CreateMyrnAppError } from '../utils/errors'
+import {
+  ensureTargetDirectory,
+  pathExists,
+  readJsonFile,
+  removePath,
+  writeJsonFile,
+} from '../utils/fs'
+import { logger } from '../utils/logger'
+import {
+  alignLockfiles,
+  getInstallCommand,
+  getStartCommand,
+  resolvePackageManager,
+} from '../utils/package-manager'
+import { createProjectMetadata } from '../utils/project-name'
+
+const TEMPLATE_REPOSITORY = 'ThinhNguyenVN/MyRN'
+
+interface PackageJson {
+  name?: string
+  displayName?: string
+  [key: string]: unknown
+}
+
+interface AppJson {
+  expo?: Record<string, unknown>
+}
+
+export async function createApp(projectName: string): Promise<void> {
+  const metadata = createProjectMetadata(projectName)
+  const targetDirectory = path.resolve(process.cwd(), metadata.directoryName)
+  const targetState = await ensureTargetDirectory(targetDirectory)
+
+  logger.start(`Creating ${chalk.cyan(metadata.directoryName)} from the MyRN template...`)
+
+  try {
+    await cloneTemplate(targetDirectory)
+    await removePath(path.join(targetDirectory, '.git'))
+    await updateProjectConfiguration(targetDirectory, metadata)
+    await initializeGitRepository(targetDirectory)
+
+    const packageManager = await resolvePackageManager(targetDirectory)
+    await alignLockfiles(targetDirectory, packageManager)
+
+    const installCommand = getInstallCommand(packageManager)
+    logger.start(`Installing dependencies using ${chalk.cyan(packageManager)}...`)
+    await runCommand(installCommand.command, installCommand.args, {
+      cwd: targetDirectory,
+    })
+
+    logger.success(`Project ${chalk.cyan(metadata.directoryName)} is ready.`)
+    printNextSteps(metadata.directoryName, getStartCommand(packageManager))
+  } catch (error) {
+    await cleanupOnFailure(targetDirectory, targetState.existedBefore)
+    throw normalizeCreateError(error)
+  }
+}
+
+async function cloneTemplate(targetDirectory: string): Promise<void> {
+  try {
+    logger.start(`Cloning template from ${chalk.cyan(`https://github.com/${TEMPLATE_REPOSITORY}`)}...`)
+
+    const emitter = degit(TEMPLATE_REPOSITORY, {
+      cache: false,
+      force: true,
+      verbose: false,
+    })
+
+    await emitter.clone(targetDirectory)
+    logger.success('Template cloned successfully.')
+  } catch (error) {
+    throw new CreateMyrnAppError('Failed to clone the template repository.', {
+      cause: error,
+      suggestion: 'Check your internet connection and verify the template repository is reachable.',
+    })
+  }
+}
+
+async function updateProjectConfiguration(
+  targetDirectory: string,
+  metadata: ReturnType<typeof createProjectMetadata>,
+): Promise<void> {
+  logger.start('Updating project configuration...')
+
+  const packageJsonPath = path.join(targetDirectory, 'package.json')
+  const appJsonPath = path.join(targetDirectory, 'app.json')
+
+  if (!(await pathExists(packageJsonPath))) {
+    throw new CreateMyrnAppError('The template is missing package.json.')
+  }
+
+  if (!(await pathExists(appJsonPath))) {
+    throw new CreateMyrnAppError('The template is missing app.json.')
+  }
+
+  const packageJson = await readJsonFile<PackageJson>(packageJsonPath)
+  packageJson.name = metadata.packageName
+  packageJson.displayName = metadata.displayName
+  await writeJsonFile(packageJsonPath, packageJson)
+
+  const appJson = await readJsonFile<AppJson>(appJsonPath)
+  const expoConfig = asRequiredObject(appJson.expo, 'Expected "expo" configuration inside app.json.')
+
+  expoConfig.name = metadata.expoName
+  expoConfig.slug = metadata.expoSlug
+  expoConfig.scheme = metadata.expoScheme
+  expoConfig.android = {
+    ...asOptionalObject(expoConfig.android),
+    package: metadata.androidPackageName,
+  }
+  expoConfig.ios = {
+    ...asOptionalObject(expoConfig.ios),
+    bundleIdentifier: metadata.iosBundleIdentifier,
+  }
+
+  appJson.expo = expoConfig
+  await writeJsonFile(appJsonPath, appJson)
+
+  logger.success('Project configuration updated.')
+}
+
+async function initializeGitRepository(targetDirectory: string): Promise<void> {
+  try {
+    logger.start('Initializing a new git repository...')
+    await runCommand('git', ['init'], { cwd: targetDirectory })
+    await runCommand('git', ['branch', '-M', 'main'], { cwd: targetDirectory })
+    logger.success('Git repository initialized.')
+  } catch (error) {
+    throw new CreateMyrnAppError('Failed to initialize a new git repository.', {
+      cause: error,
+      suggestion: 'Make sure git is installed and available on your PATH.',
+    })
+  }
+}
+
+async function cleanupOnFailure(targetDirectory: string, existedBefore: boolean): Promise<void> {
+  if (existedBefore) {
+    return
+  }
+
+  await removePath(targetDirectory)
+}
+
+function asRequiredObject(
+  value: unknown,
+  errorMessage = 'Expected a JSON object.',
+): Record<string, unknown> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>
+  }
+
+  throw new CreateMyrnAppError(errorMessage)
+}
+
+function asOptionalObject(value: unknown): Record<string, unknown> {
+  if (!value) {
+    return {}
+  }
+
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>
+  }
+
+  throw new CreateMyrnAppError('Expected a JSON object.')
+}
+
+function normalizeCreateError(error: unknown): CreateMyrnAppError {
+  if (error instanceof CreateMyrnAppError) {
+    return error
+  }
+
+  return new CreateMyrnAppError('Failed to create the application.', {
+    cause: error,
+  })
+}
+
+function printNextSteps(projectName: string, startCommand: string): void {
+  const changeDirectoryCommand = chalk.cyan(`cd ${projectName}`)
+  const startAppCommand = chalk.cyan(startCommand)
+  const runAndroidCommand = chalk.cyan('npx expo run:android')
+  const runIosCommand = chalk.cyan('npx expo run:ios')
+
+  console.log()
+  console.log(chalk.green('Success! Your React Native app is ready.'))
+  console.log()
+  console.log('Next steps:')
+  console.log(`  ${changeDirectoryCommand}`)
+  console.log(`  ${startAppCommand}`)
+  console.log(`  ${runAndroidCommand}`)
+  console.log(`  ${runIosCommand}`)
+  console.log()
+}
