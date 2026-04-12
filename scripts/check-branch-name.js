@@ -2,7 +2,7 @@
 
 import { execSync } from 'node:child_process'
 
-const allowedPattern = /^(feat|fix|issue)\/[a-z0-9._-]+$/
+const allowedPattern = /^(feat|fix|issue|release)\/[a-z0-9._-]+$/
 const automationPattern = /^cursor\/[a-z0-9._/-]+$/
 
 const candidate =
@@ -35,7 +35,7 @@ if (allowedPattern.test(branchName)) {
 // Keep automation-compatible branches from blocking current agent workflows.
 if (automationPattern.test(branchName)) {
   console.warn(
-    `Branch "${branchName}" is allowed for automation only. Use feat/, fix/, or issue/ for regular work.`,
+    `Branch "${branchName}" is allowed for automation only. Use feat/, fix/, issue/, or release/ for regular work.`,
   )
   process.exit(0)
 }
@@ -43,8 +43,8 @@ if (automationPattern.test(branchName)) {
 console.error(
   [
     `Invalid branch name: "${branchName}".`,
-    'Use one of these prefixes: feat/, fix/, issue/.',
-    'Example: feat/login-screen or fix/auth-token-refresh.',
+    'Use one of these prefixes: feat/, fix/, issue/, release/.',
+    'Example: feat/login-screen, fix/auth-token-refresh, or release/v1.2.0.',
   ].join(' '),
 )
 process.exit(1)

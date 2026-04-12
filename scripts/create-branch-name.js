@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-const allowedTypes = new Set(['feat', 'fix', 'issue'])
+const allowedTypes = new Set(['feat', 'fix', 'issue', 'release'])
 
 const [, , typeArg, ...nameParts] = process.argv
 
 if (!allowedTypes.has(typeArg)) {
-  console.error('Branch type must be one of: feat, fix, issue.')
+  console.error('Branch type must be one of: feat, fix, issue, release.')
   process.exit(1)
 }
 

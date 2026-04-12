@@ -9,12 +9,14 @@ Use branch names in this format:
 - `feat/<description>`
 - `fix/<description>`
 - `issue/<description>`
+- `release/<description>`
 
 Examples:
 
 - `feat/branch-name-rule`
 - `fix/template-config-rewrite`
 - `issue/123-publish-flow`
+- `release/v1-0-0`
 
 Generate a valid branch name from the helper script:
 
@@ -22,6 +24,7 @@ Generate a valid branch name from the helper script:
 npm run branch:create -- feat branch name rule
 npm run branch:create -- fix template config rewrite
 npm run branch:create -- issue 123 publish flow
+npm run branch:create -- release v1 0 0
 ```
 
 Validate the current branch manually:

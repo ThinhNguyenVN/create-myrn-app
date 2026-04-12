@@ -1,3 +1,4 @@
+import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
 import chalk from 'chalk'
@@ -44,6 +45,7 @@ export async function createApp(projectName: string): Promise<void> {
     await cloneTemplate(targetDirectory)
     await removePath(path.join(targetDirectory, '.git'))
     await updateProjectConfiguration(targetDirectory, metadata)
+    await updateBranchNamingScripts(targetDirectory)
     await initializeGitRepository(targetDirectory)
 
     const packageManager = await resolvePackageManager(targetDirectory)
@@ -185,6 +187,93 @@ function sanitizeExpoExtra(value: unknown): Record<string, unknown> {
   }
 
   return extra
+}
+
+async function updateBranchNamingScripts(targetDirectory: string): Promise<void> {
+  const createBranchScriptPath = path.join(targetDirectory, 'scripts', 'create-branch-name.js')
+  const checkBranchScriptPath = path.join(targetDirectory, 'scripts', 'check-branch-name.js')
+
+  if (await pathExists(createBranchScriptPath)) {
+    await fs.writeFile(createBranchScriptPath, getCreateBranchScriptContent(), 'utf8')
+  }
+
+  if (await pathExists(checkBranchScriptPath)) {
+    await fs.writeFile(checkBranchScriptPath, getCheckBranchScriptContent(), 'utf8')
+  }
+}
+
+function getCreateBranchScriptContent(): string {
+  return `const allowedTypes = new Set(['feat', 'fix', 'issue', 'release'])
+
+const [, , typeArg, ...nameParts] = process.argv
+
+if (!allowedTypes.has(typeArg)) {
+  console.error('Branch type must be one of: feat, fix, issue, release.')
+  process.exit(1)
+}
+
+const rawName = nameParts.join(' ').trim()
+
+if (!rawName) {
+  console.error('Branch description is required. Example: yarn branch:create feat login screen')
+  process.exit(1)
+}
+
+const slug = rawName
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-+|-+$/g, '')
+
+if (!slug) {
+  console.error('Branch description must contain letters or numbers.')
+  process.exit(1)
+}
+
+console.log(\`\${typeArg}/\${slug}\`)
+`
+}
+
+function getCheckBranchScriptContent(): string {
+  return `const { execSync } = require('node:child_process')
+
+const allowedPattern = /^(feat|fix|issue|release)\\/[a-z0-9._-]+$/
+
+const candidate =
+  process.env.BRANCH_NAME ||
+  process.env.GITHUB_HEAD_REF ||
+  process.env.GITHUB_REF_NAME ||
+  process.env.CI_COMMIT_REF_NAME
+
+let branchName = candidate || ''
+
+if (!branchName) {
+  branchName = execSync('git branch --show-current', { encoding: 'utf8' }).trim()
+}
+
+if (!branchName) {
+  console.error('Unable to determine branch name for validation.')
+  process.exit(1)
+}
+
+if (branchName === 'main' || branchName === 'master') {
+  console.log(\`Branch "\${branchName}" is allowed.\`)
+  process.exit(0)
+}
+
+if (allowedPattern.test(branchName)) {
+  console.log(\`Branch "\${branchName}" is allowed.\`)
+  process.exit(0)
+}
+
+console.error(
+  [
+    \`Invalid branch name: "\${branchName}".\`,
+    'Use one of these prefixes: feat/, fix/, issue/, release/.',
+    'Example: feat/login-screen, fix/auth-token-refresh, or release/v1.2.0.',
+  ].join(' '),
+)
+process.exit(1)
+`
 }
 
 function normalizeCreateError(error: unknown): CreateMyrnAppError {
