@@ -2,6 +2,34 @@
 
 CLI tool to bootstrap a new React Native app from the [`ThinhNguyenVN/MyRN`](https://github.com/ThinhNguyenVN/MyRN) template.
 
+## Branch naming
+
+Use branch names in this format:
+
+- `feat/<description>`
+- `fix/<description>`
+- `issue/<description>`
+
+Examples:
+
+- `feat/branch-name-rule`
+- `fix/template-config-rewrite`
+- `issue/123-publish-flow`
+
+Generate a valid branch name from the helper script:
+
+```bash
+npm run branch:create -- feat branch name rule
+npm run branch:create -- fix template config rewrite
+npm run branch:create -- issue 123 publish flow
+```
+
+Validate the current branch manually:
+
+```bash
+npm run check:branch-name
+```
+
 ## Features
 
 - Clone the MyRN template into a new folder
@@ -39,6 +67,7 @@ src/
 
 ```bash
 npm install
+npm run prepare
 npm run build
 npm run typecheck
 ```
