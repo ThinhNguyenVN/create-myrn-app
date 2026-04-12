@@ -3,23 +3,23 @@ import path from 'node:path'
 import chalk from 'chalk'
 import degit from 'degit'
 
-import { runCommand } from '../utils/command'
-import { CreateMyrnAppError } from '../utils/errors'
+import { runCommand } from '../utils/command.js'
+import { CreateMyrnAppError } from '../utils/errors.js'
 import {
   ensureTargetDirectory,
   pathExists,
   readJsonFile,
   removePath,
   writeJsonFile,
-} from '../utils/fs'
-import { logger } from '../utils/logger'
+} from '../utils/fs.js'
+import { logger } from '../utils/logger.js'
 import {
   alignLockfiles,
   getInstallCommand,
   getStartCommand,
   resolvePackageManager,
-} from '../utils/package-manager'
-import { createProjectMetadata } from '../utils/project-name'
+} from '../utils/package-manager.js'
+import { createProjectMetadata } from '../utils/project-name.js'
 
 const TEMPLATE_REPOSITORY = 'ThinhNguyenVN/MyRN'
 
@@ -111,6 +111,7 @@ async function updateProjectConfiguration(
   expoConfig.name = metadata.expoName
   expoConfig.slug = metadata.expoSlug
   expoConfig.scheme = metadata.expoScheme
+  delete expoConfig.owner
   expoConfig.android = {
     ...asOptionalObject(expoConfig.android),
     package: metadata.androidPackageName,
@@ -119,6 +120,7 @@ async function updateProjectConfiguration(
     ...asOptionalObject(expoConfig.ios),
     bundleIdentifier: metadata.iosBundleIdentifier,
   }
+  expoConfig.extra = sanitizeExpoExtra(expoConfig.extra)
 
   appJson.expo = expoConfig
   await writeJsonFile(appJsonPath, appJson)
@@ -129,8 +131,7 @@ async function updateProjectConfiguration(
 async function initializeGitRepository(targetDirectory: string): Promise<void> {
   try {
     logger.start('Initializing a new git repository...')
-    await runCommand('git', ['init'], { cwd: targetDirectory })
-    await runCommand('git', ['branch', '-M', 'main'], { cwd: targetDirectory })
+    await runCommand('git', ['init', '--initial-branch=main'], { cwd: targetDirectory })
     logger.success('Git repository initialized.')
   } catch (error) {
     throw new CreateMyrnAppError('Failed to initialize a new git repository.', {
@@ -169,6 +170,21 @@ function asOptionalObject(value: unknown): Record<string, unknown> {
   }
 
   throw new CreateMyrnAppError('Expected a JSON object.')
+}
+
+function sanitizeExpoExtra(value: unknown): Record<string, unknown> {
+  const extra = asOptionalObject(value)
+  const eas = asOptionalObject(extra.eas)
+
+  delete eas.projectId
+
+  if (Object.keys(eas).length > 0) {
+    extra.eas = eas
+  } else {
+    delete extra.eas
+  }
+
+  return extra
 }
 
 function normalizeCreateError(error: unknown): CreateMyrnAppError {

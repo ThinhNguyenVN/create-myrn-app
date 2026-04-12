@@ -1,7 +1,7 @@
 import { constants, promises as fs } from 'node:fs'
 import path from 'node:path'
 
-import { CreateMyrnAppError } from './errors'
+import { CreateMyrnAppError } from './errors.js'
 
 export async function pathExists(targetPath: string): Promise<boolean> {
   try {

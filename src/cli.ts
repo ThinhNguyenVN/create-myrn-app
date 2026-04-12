@@ -2,12 +2,13 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { Command } from 'commander'
 
-import { createApp } from './actions/create-app'
-import { CreateMyrnAppError, toErrorMessage } from './utils/errors'
-import { logger } from './utils/logger'
+import { createApp } from './actions/create-app.js'
+import { CreateMyrnAppError, toErrorMessage } from './utils/errors.js'
+import { logger } from './utils/logger.js'
 
 async function main(): Promise<void> {
   const program = new Command()
@@ -37,7 +38,8 @@ void main().catch((error: unknown) => {
 })
 
 function getPackageVersion(): string {
-  const packageJsonPath = path.resolve(__dirname, '..', 'package.json')
+  const currentDirectory = path.dirname(fileURLToPath(import.meta.url))
+  const packageJsonPath = path.resolve(currentDirectory, '..', 'package.json')
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as {
     version?: string
   }

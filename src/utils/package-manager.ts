@@ -1,7 +1,7 @@
 import path from 'node:path'
 
-import { commandExists } from './command'
-import { pathExists, removePath } from './fs'
+import { commandExists } from './command.js'
+import { pathExists, removePath } from './fs.js'
 
 export type PackageManager = 'npm' | 'yarn'
 

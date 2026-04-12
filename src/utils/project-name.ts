@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import validatePackageName from 'validate-npm-package-name'
 
-import { CreateMyrnAppError } from './errors'
+import { CreateMyrnAppError } from './errors.js'
 
 const RESERVED_DIRECTORY_NAMES = new Set([
   '.',
