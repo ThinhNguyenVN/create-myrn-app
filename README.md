@@ -51,6 +51,12 @@ npm run check:branch-name
 npx create-myrn-app myApp
 ```
 
+Use custom native identifiers when needed:
+
+```bash
+npx create-myrn-app myApp --package-name com.company.myapp --bundle-id com.company.myapp
+```
+
 ## Project structure
 
 ```text
@@ -80,6 +86,18 @@ Run the built CLI locally:
 
 ```bash
 node dist/cli.js myApp
+```
+
+Run a one-command local smoke test:
+
+```bash
+npm run smoke:test
+```
+
+Smoke test with custom identifiers:
+
+```bash
+npm run smoke:test -- --package-name com.company.demo --bundle-id com.company.demo
 ```
 
 ## Publish checklist

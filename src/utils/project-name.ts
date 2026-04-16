@@ -22,7 +22,17 @@ export interface ProjectMetadata {
   bundleId: string
 }
 
-export function createProjectMetadata(projectName: string): ProjectMetadata {
+export interface ProjectMetadataOverrides {
+  packageName?: string
+  bundleId?: string
+}
+
+const REVERSE_DNS_IDENTIFIER_PATTERN = /^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/
+
+export function createProjectMetadata(
+  projectName: string,
+  overrides: ProjectMetadataOverrides = {},
+): ProjectMetadata {
   const directoryName = projectName.trim()
   validateDirectoryName(directoryName)
 
@@ -43,14 +53,18 @@ export function createProjectMetadata(projectName: string): ProjectMetadata {
     ? words.map(capitalize).join(' ')
     : directoryName
   const nativeIdentifier = toNativeIdentifier(words)
-  const packageName = `com.${nativeIdentifier}`
+  const packageName = overrides.packageName?.trim() || `com.${nativeIdentifier}`
+  const bundleId = overrides.bundleId?.trim() || packageName
+
+  validateReverseDnsIdentifier(packageName, 'package name')
+  validateReverseDnsIdentifier(bundleId, 'bundle identifier')
 
   return {
     directoryName,
     appName,
     slug,
     packageName,
-    bundleId: packageName,
+    bundleId,
   }
 }
 
@@ -99,4 +113,12 @@ function toNativeIdentifier(words: string[]): string {
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
+}
+
+function validateReverseDnsIdentifier(value: string, label: string): void {
+  if (!REVERSE_DNS_IDENTIFIER_PATTERN.test(value)) {
+    throw new CreateMyrnAppError(`Invalid ${label}: "${value}".`, {
+      suggestion: `Use a reverse-DNS identifier like "com.example.app" for the ${label}.`,
+    })
+  }
 }

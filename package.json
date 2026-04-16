@@ -16,6 +16,7 @@
     "clean": "rimraf dist",
     "build": "tsup src/cli.ts --format esm --target node18 --clean --out-dir dist",
     "dev": "tsup src/cli.ts --format esm --target node18 --watch --out-dir dist",
+    "smoke:test": "node ./scripts/smoke-test.js",
     "typecheck": "tsc --noEmit",
     "prepare": "husky",
     "prepublishOnly": "npm run clean && npm run build && npm run typecheck",

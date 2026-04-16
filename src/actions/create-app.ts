@@ -26,8 +26,8 @@ interface TemplateConfigJson {
   [key: string]: unknown
 }
 
-export async function createApp(projectName: string): Promise<void> {
-  const metadata = createProjectMetadata(projectName)
+export async function createApp(projectName: string, options: CreateAppOptions = {}): Promise<void> {
+  const metadata = createProjectMetadata(projectName, options)
   const targetDirectory = path.resolve(process.cwd(), metadata.directoryName)
   const targetState = await ensureTargetDirectory(targetDirectory)
 
@@ -55,6 +55,11 @@ export async function createApp(projectName: string): Promise<void> {
     await cleanupOnFailure(targetDirectory, targetState.existedBefore)
     throw normalizeCreateError(error)
   }
+}
+
+export interface CreateAppOptions {
+  packageName?: string
+  bundleId?: string
 }
 
 async function cloneTemplate(targetDirectory: string): Promise<void> {
