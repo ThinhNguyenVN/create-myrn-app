@@ -16,13 +16,10 @@ const RESERVED_DIRECTORY_NAMES = new Set([
 
 export interface ProjectMetadata {
   directoryName: string
+  appName: string
+  slug: string
   packageName: string
-  displayName: string
-  expoName: string
-  expoSlug: string
-  expoScheme: string
-  androidPackageName: string
-  iosBundleIdentifier: string
+  bundleId: string
 }
 
 export function createProjectMetadata(projectName: string): ProjectMetadata {
@@ -34,28 +31,26 @@ export function createProjectMetadata(projectName: string): ProjectMetadata {
     throw new CreateMyrnAppError('Project name must include at least one alphanumeric character.')
   }
 
-  const packageName = words.map((word) => word.toLowerCase()).join('-')
-  const validation = validatePackageName(packageName)
+  const slug = words.map((word) => word.toLowerCase()).join('-')
+  const validation = validatePackageName(slug)
   if (!validation.validForNewPackages) {
-    throw new CreateMyrnAppError(`"${projectName}" cannot be converted into a valid package name.`, {
+    throw new CreateMyrnAppError(`"${projectName}" cannot be converted into a valid slug.`, {
       suggestion: 'Use letters, numbers, dashes, or underscores in the project name.',
     })
   }
 
-  const displayName = /[-_]/.test(directoryName)
+  const appName = /[-_]/.test(directoryName)
     ? words.map(capitalize).join(' ')
     : directoryName
   const nativeIdentifier = toNativeIdentifier(words)
+  const packageName = `com.${nativeIdentifier}`
 
   return {
     directoryName,
+    appName,
+    slug,
     packageName,
-    displayName,
-    expoName: displayName,
-    expoSlug: packageName,
-    expoScheme: packageName,
-    androidPackageName: `com.${nativeIdentifier}`,
-    iosBundleIdentifier: `com.${nativeIdentifier}`,
+    bundleId: packageName,
   }
 }
 

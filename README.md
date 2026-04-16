@@ -37,10 +37,11 @@ npm run check:branch-name
 
 - Clone the MyRN template into a new folder
 - Remove the template git history and initialize a fresh git repository
-- Update app metadata automatically:
-  - `package.json` → `name`, `displayName`
-  - `app.json` → `expo.name`, `expo.slug`, `expo.scheme`
-  - `app.json` → `android.package`, `ios.bundleIdentifier`
+- Update `template.config.json` automatically:
+  - `appName`
+  - `slug`
+  - `packageName`
+  - `bundleId`
 - Install dependencies with `npm` or `yarn`
 - Print clear next steps when the app is ready
 

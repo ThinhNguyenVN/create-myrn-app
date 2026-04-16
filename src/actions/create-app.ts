@@ -6,13 +6,7 @@ import degit from 'degit'
 
 import { runCommand } from '../utils/command.js'
 import { CreateMyrnAppError } from '../utils/errors.js'
-import {
-  ensureTargetDirectory,
-  pathExists,
-  readJsonFile,
-  removePath,
-  writeJsonFile,
-} from '../utils/fs.js'
+import { ensureTargetDirectory, pathExists, readJsonFile, removePath, writeJsonFile } from '../utils/fs.js'
 import { logger } from '../utils/logger.js'
 import {
   alignLockfiles,
@@ -24,14 +18,12 @@ import { createProjectMetadata } from '../utils/project-name.js'
 
 const TEMPLATE_REPOSITORY = 'ThinhNguyenVN/MyRN'
 
-interface PackageJson {
-  name?: string
-  displayName?: string
+interface TemplateConfigJson {
+  appName?: string
+  slug?: string
+  packageName?: string
+  bundleId?: string
   [key: string]: unknown
-}
-
-interface AppJson {
-  expo?: Record<string, unknown>
 }
 
 export async function createApp(projectName: string): Promise<void> {
@@ -91,41 +83,18 @@ async function updateProjectConfiguration(
 ): Promise<void> {
   logger.start('Updating project configuration...')
 
-  const packageJsonPath = path.join(targetDirectory, 'package.json')
-  const appJsonPath = path.join(targetDirectory, 'app.json')
+  const templateConfigPath = path.join(targetDirectory, 'template.config.json')
 
-  if (!(await pathExists(packageJsonPath))) {
-    throw new CreateMyrnAppError('The template is missing package.json.')
+  if (!(await pathExists(templateConfigPath))) {
+    throw new CreateMyrnAppError('The template is missing template.config.json.')
   }
 
-  if (!(await pathExists(appJsonPath))) {
-    throw new CreateMyrnAppError('The template is missing app.json.')
-  }
-
-  const packageJson = await readJsonFile<PackageJson>(packageJsonPath)
-  packageJson.name = metadata.packageName
-  packageJson.displayName = metadata.displayName
-  await writeJsonFile(packageJsonPath, packageJson)
-
-  const appJson = await readJsonFile<AppJson>(appJsonPath)
-  const expoConfig = asRequiredObject(appJson.expo, 'Expected "expo" configuration inside app.json.')
-
-  expoConfig.name = metadata.expoName
-  expoConfig.slug = metadata.expoSlug
-  expoConfig.scheme = metadata.expoScheme
-  delete expoConfig.owner
-  expoConfig.android = {
-    ...asOptionalObject(expoConfig.android),
-    package: metadata.androidPackageName,
-  }
-  expoConfig.ios = {
-    ...asOptionalObject(expoConfig.ios),
-    bundleIdentifier: metadata.iosBundleIdentifier,
-  }
-  expoConfig.extra = sanitizeExpoExtra(expoConfig.extra)
-
-  appJson.expo = expoConfig
-  await writeJsonFile(appJsonPath, appJson)
+  const templateConfig = await readJsonFile<TemplateConfigJson>(templateConfigPath)
+  templateConfig.appName = metadata.appName
+  templateConfig.slug = metadata.slug
+  templateConfig.packageName = metadata.packageName
+  templateConfig.bundleId = metadata.bundleId
+  await writeJsonFile(templateConfigPath, templateConfig)
 
   logger.success('Project configuration updated.')
 }
@@ -149,44 +118,6 @@ async function cleanupOnFailure(targetDirectory: string, existedBefore: boolean)
   }
 
   await removePath(targetDirectory)
-}
-
-function asRequiredObject(
-  value: unknown,
-  errorMessage = 'Expected a JSON object.',
-): Record<string, unknown> {
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
-    return value as Record<string, unknown>
-  }
-
-  throw new CreateMyrnAppError(errorMessage)
-}
-
-function asOptionalObject(value: unknown): Record<string, unknown> {
-  if (!value) {
-    return {}
-  }
-
-  if (typeof value === 'object' && !Array.isArray(value)) {
-    return value as Record<string, unknown>
-  }
-
-  throw new CreateMyrnAppError('Expected a JSON object.')
-}
-
-function sanitizeExpoExtra(value: unknown): Record<string, unknown> {
-  const extra = asOptionalObject(value)
-  const eas = asOptionalObject(extra.eas)
-
-  delete eas.projectId
-
-  if (Object.keys(eas).length > 0) {
-    extra.eas = eas
-  } else {
-    delete extra.eas
-  }
-
-  return extra
 }
 
 async function updateBranchNamingScripts(targetDirectory: string): Promise<void> {
