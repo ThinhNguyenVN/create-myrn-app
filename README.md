@@ -40,8 +40,7 @@ npm run check:branch-name
 - Update `template.config.json` automatically:
   - `appName`
   - `slug`
-  - `packageName`
-  - `bundleId`
+  - `appId` mapped to both `packageName` and `bundleId`
 - Install dependencies with `npm` or `yarn`
 - Print clear next steps when the app is ready
 
@@ -51,10 +50,17 @@ npm run check:branch-name
 npx create-myrn-app myApp
 ```
 
-Use custom native identifiers when needed:
+Override the display name, slug, or native app id when needed:
 
 ```bash
-npx create-myrn-app myApp --package-name com.company.myapp --bundle-id com.company.myapp
+# custom app id for both Android + iOS
+npx create-myrn-app myApp --app-id com.company.myapp
+
+# custom app name, slug auto-generated from app name
+npx create-myrn-app myApp --app-name "My Custom App"
+
+# custom slug, app name auto-generated from slug
+npx create-myrn-app myApp --slug my-custom-app
 ```
 
 ## Project structure
@@ -97,7 +103,14 @@ npm run smoke:test
 Smoke test with custom identifiers:
 
 ```bash
-npm run smoke:test -- --package-name com.company.demo --bundle-id com.company.demo
+npm run smoke:test -- --app-id com.company.demo
+```
+
+Smoke test with custom app name or slug:
+
+```bash
+npm run smoke:test -- --app-name "Smoke Test App"
+npm run smoke:test -- --slug smoke-test-app
 ```
 
 ## Publish checklist

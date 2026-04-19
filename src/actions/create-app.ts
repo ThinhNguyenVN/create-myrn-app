@@ -58,8 +58,7 @@ export async function createApp(projectName: string, options: CreateAppOptions =
 }
 
 export interface CreateAppOptions {
-  packageName?: string
-  bundleId?: string
+  appId?: string
 }
 
 async function cloneTemplate(targetDirectory: string): Promise<void> {
@@ -97,8 +96,8 @@ async function updateProjectConfiguration(
   const templateConfig = await readJsonFile<TemplateConfigJson>(templateConfigPath)
   templateConfig.appName = metadata.appName
   templateConfig.slug = metadata.slug
-  templateConfig.packageName = metadata.packageName
-  templateConfig.bundleId = metadata.bundleId
+  templateConfig.packageName = metadata.appId
+  templateConfig.bundleId = metadata.appId
   await writeJsonFile(templateConfigPath, templateConfig)
 
   logger.success('Project configuration updated.')
