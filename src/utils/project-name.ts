@@ -22,6 +22,8 @@ export interface ProjectMetadata {
 }
 
 export interface ProjectMetadataOverrides {
+  appName?: string
+  slug?: string
   appId?: string
 }
 
@@ -39,17 +41,20 @@ export function createProjectMetadata(
     throw new CreateMyrnAppError('Project name must include at least one alphanumeric character.')
   }
 
-  const slug = words.map((word) => word.toLowerCase()).join('-')
-  const validation = validatePackageName(slug)
-  if (!validation.validForNewPackages) {
-    throw new CreateMyrnAppError(`"${projectName}" cannot be converted into a valid slug.`, {
-      suggestion: 'Use letters, numbers, dashes, or underscores in the project name.',
-    })
-  }
+  const defaultSlug = buildSlug(directoryName)
+  validateSlug(defaultSlug, projectName)
 
-  const appName = /[-_]/.test(directoryName)
+  const defaultAppName = /[-_]/.test(directoryName)
     ? words.map(capitalize).join(' ')
     : directoryName
+  const appNameOverride = normalizeOptionalString(overrides.appName)
+  const slugOverride = normalizeOptionalString(overrides.slug)
+  const appName = appNameOverride ?? (slugOverride ? buildAppNameFromSlug(slugOverride) : defaultAppName)
+  const slug = slugOverride ? buildSlug(slugOverride) : appNameOverride ? buildSlug(appNameOverride) : defaultSlug
+
+  validateNonEmpty(appName, 'app name')
+  validateSlug(slug, appNameOverride ?? slugOverride ?? projectName)
+
   const nativeIdentifier = toNativeIdentifier(words)
   const appId = overrides.appId?.trim() || `com.${nativeIdentifier}`
 
@@ -114,6 +119,54 @@ function validateReverseDnsIdentifier(value: string, label: string): void {
   if (!REVERSE_DNS_IDENTIFIER_PATTERN.test(value)) {
     throw new CreateMyrnAppError(`Invalid ${label}: "${value}".`, {
       suggestion: `Use a reverse-DNS identifier like "com.example.app" for the ${label}.`,
+    })
+  }
+}
+
+function normalizeOptionalString(value: string | undefined): string | undefined {
+  const normalized = value?.trim()
+  return normalized ? normalized : undefined
+}
+
+function validateNonEmpty(value: string, label: string): void {
+  if (!value.trim()) {
+    throw new CreateMyrnAppError(`Invalid ${label}: value cannot be empty.`)
+  }
+}
+
+function buildSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function buildAppNameFromSlug(value: string): string {
+  const words = value
+    .split(/[^a-zA-Z0-9]+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+  if (words.length === 0) {
+    throw new CreateMyrnAppError(`Invalid slug: "${value}".`, {
+      suggestion: 'Use letters, numbers, or separators like "-" and "_".',
+    })
+  }
+
+  return words.map(capitalize).join(' ')
+}
+
+function validateSlug(value: string, source: string): void {
+  if (!value) {
+    throw new CreateMyrnAppError(`"${source}" cannot be converted into a valid slug.`, {
+      suggestion: 'Use letters, numbers, dashes, or underscores for the app name or slug.',
+    })
+  }
+
+  const validation = validatePackageName(value)
+  if (!validation.validForNewPackages) {
+    throw new CreateMyrnAppError(`"${source}" cannot be converted into a valid slug.`, {
+      suggestion: 'Use letters, numbers, dashes, or underscores for the app name or slug.',
     })
   }
 }
