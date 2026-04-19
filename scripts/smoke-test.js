@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { rm } from 'node:fs/promises'
+import { mkdir, rm } from 'node:fs/promises'
 import path from 'node:path'
 
 import { execa } from 'execa'
@@ -12,6 +12,7 @@ const forwardedArgs = process.argv.slice(2)
 
 async function main() {
   await rm(smokeRootDirectory, { recursive: true, force: true })
+  await mkdir(smokeRootDirectory, { recursive: true })
 
   await execa('node', [cliPath, 'create-myrn-app-smoke', ...forwardedArgs], {
     cwd: smokeRootDirectory,
