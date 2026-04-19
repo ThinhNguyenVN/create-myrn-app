@@ -50,10 +50,17 @@ npm run check:branch-name
 npx create-myrn-app myApp
 ```
 
-Use a custom native app identifier when needed:
+Override the display name, slug, or native app id when needed:
 
 ```bash
+# custom app id for both Android + iOS
 npx create-myrn-app myApp --app-id com.company.myapp
+
+# custom app name, slug auto-generated from app name
+npx create-myrn-app myApp --app-name "My Custom App"
+
+# custom slug, app name auto-generated from slug
+npx create-myrn-app myApp --slug my-custom-app
 ```
 
 ## Project structure
@@ -97,6 +104,13 @@ Smoke test with custom identifiers:
 
 ```bash
 npm run smoke:test -- --app-id com.company.demo
+```
+
+Smoke test with custom app name or slug:
+
+```bash
+npm run smoke:test -- --app-name "Smoke Test App"
+npm run smoke:test -- --slug smoke-test-app
 ```
 
 ## Publish checklist
