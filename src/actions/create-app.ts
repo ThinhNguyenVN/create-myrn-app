@@ -242,11 +242,5 @@ function printNextSteps(projectName: string, startCommand: string): void {
 }
 
 function resolveDisplayProjectDirectory(targetDirectory: string): string {
-  const smokeTestRoot = path.resolve(process.cwd(), '.smoke-test')
-
-  if (targetDirectory.startsWith(`${smokeTestRoot}${path.sep}`)) {
-    return path.relative(process.cwd(), targetDirectory)
-  }
-
   return path.basename(targetDirectory)
 }

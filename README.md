@@ -103,8 +103,10 @@ npm run smoke:test
 The smoke test creates the generated project in:
 
 ```bash
-.smoke-test/create-myrn-app-smoke
+tmp/smoke-test
 ```
+
+This directory is ignored by git.
 
 Smoke test with custom identifiers:
 
