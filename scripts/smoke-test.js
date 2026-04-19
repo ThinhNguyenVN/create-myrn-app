@@ -16,6 +16,11 @@ async function main() {
     cwd: '/tmp',
     stdio: 'inherit',
   })
+
+  console.log()
+  console.log(`Smoke test project path: ${targetDirectory}`)
+  console.log(`Open it with: cd ${targetDirectory}`)
+  console.log()
 }
 
 void main().catch((error) => {
