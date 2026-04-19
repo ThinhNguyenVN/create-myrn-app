@@ -18,13 +18,11 @@ export interface ProjectMetadata {
   directoryName: string
   appName: string
   slug: string
-  packageName: string
-  bundleId: string
+  appId: string
 }
 
 export interface ProjectMetadataOverrides {
-  packageName?: string
-  bundleId?: string
+  appId?: string
 }
 
 const REVERSE_DNS_IDENTIFIER_PATTERN = /^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/
@@ -53,18 +51,15 @@ export function createProjectMetadata(
     ? words.map(capitalize).join(' ')
     : directoryName
   const nativeIdentifier = toNativeIdentifier(words)
-  const packageName = overrides.packageName?.trim() || `com.${nativeIdentifier}`
-  const bundleId = overrides.bundleId?.trim() || packageName
+  const appId = overrides.appId?.trim() || `com.${nativeIdentifier}`
 
-  validateReverseDnsIdentifier(packageName, 'package name')
-  validateReverseDnsIdentifier(bundleId, 'bundle identifier')
+  validateReverseDnsIdentifier(appId, 'app identifier')
 
   return {
     directoryName,
     appName,
     slug,
-    packageName,
-    bundleId,
+    appId,
   }
 }
 

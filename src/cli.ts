@@ -11,8 +11,7 @@ import { CreateMyrnAppError, toErrorMessage } from './utils/errors.js'
 import { logger } from './utils/logger.js'
 
 interface CliOptions {
-  packageName?: string
-  bundleId?: string
+  appId?: string
 }
 
 async function main(): Promise<void> {
@@ -25,8 +24,10 @@ async function main(): Promise<void> {
     .showHelpAfterError()
     .showSuggestionAfterError()
     .argument('<project-name>', 'Project directory name')
-    .option('--package-name <package-name>', 'Custom Android package name (reverse-DNS format)')
-    .option('--bundle-id <bundle-id>', 'Custom iOS bundle identifier (reverse-DNS format)')
+    .option(
+      '--app-id <app-id>',
+      'Custom app identifier used for both Android package name and iOS bundle id (reverse-DNS format)',
+    )
     .action(async (projectName: string, options: CliOptions) => {
       await createApp(projectName, options)
     })
