@@ -100,6 +100,12 @@ Run a one-command local smoke test:
 npm run smoke:test
 ```
 
+The smoke test creates the generated project in:
+
+```bash
+/tmp/create-myrn-app-smoke
+```
+
 Smoke test with custom identifiers:
 
 ```bash
