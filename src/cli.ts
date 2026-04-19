@@ -10,6 +10,11 @@ import { createApp } from './actions/create-app.js'
 import { CreateMyrnAppError, toErrorMessage } from './utils/errors.js'
 import { logger } from './utils/logger.js'
 
+interface CliOptions {
+  packageName?: string
+  bundleId?: string
+}
+
 async function main(): Promise<void> {
   const program = new Command()
 
@@ -20,8 +25,10 @@ async function main(): Promise<void> {
     .showHelpAfterError()
     .showSuggestionAfterError()
     .argument('<project-name>', 'Project directory name')
-    .action(async (projectName: string) => {
-      await createApp(projectName)
+    .option('--package-name <package-name>', 'Custom Android package name (reverse-DNS format)')
+    .option('--bundle-id <bundle-id>', 'Custom iOS bundle identifier (reverse-DNS format)')
+    .action(async (projectName: string, options: CliOptions) => {
+      await createApp(projectName, options)
     })
 
   await program.parseAsync(process.argv)

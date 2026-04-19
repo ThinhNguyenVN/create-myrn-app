@@ -37,10 +37,11 @@ npm run check:branch-name
 
 - Clone the MyRN template into a new folder
 - Remove the template git history and initialize a fresh git repository
-- Update app metadata automatically:
-  - `package.json` → `name`, `displayName`
-  - `app.json` → `expo.name`, `expo.slug`, `expo.scheme`
-  - `app.json` → `android.package`, `ios.bundleIdentifier`
+- Update `template.config.json` automatically:
+  - `appName`
+  - `slug`
+  - `packageName`
+  - `bundleId`
 - Install dependencies with `npm` or `yarn`
 - Print clear next steps when the app is ready
 
@@ -48,6 +49,12 @@ npm run check:branch-name
 
 ```bash
 npx create-myrn-app myApp
+```
+
+Use custom native identifiers when needed:
+
+```bash
+npx create-myrn-app myApp --package-name com.company.myapp --bundle-id com.company.myapp
 ```
 
 ## Project structure
@@ -79,6 +86,18 @@ Run the built CLI locally:
 
 ```bash
 node dist/cli.js myApp
+```
+
+Run a one-command local smoke test:
+
+```bash
+npm run smoke:test
+```
+
+Smoke test with custom identifiers:
+
+```bash
+npm run smoke:test -- --package-name com.company.demo --bundle-id com.company.demo
 ```
 
 ## Publish checklist

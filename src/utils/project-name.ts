@@ -16,16 +16,23 @@ const RESERVED_DIRECTORY_NAMES = new Set([
 
 export interface ProjectMetadata {
   directoryName: string
+  appName: string
+  slug: string
   packageName: string
-  displayName: string
-  expoName: string
-  expoSlug: string
-  expoScheme: string
-  androidPackageName: string
-  iosBundleIdentifier: string
+  bundleId: string
 }
 
-export function createProjectMetadata(projectName: string): ProjectMetadata {
+export interface ProjectMetadataOverrides {
+  packageName?: string
+  bundleId?: string
+}
+
+const REVERSE_DNS_IDENTIFIER_PATTERN = /^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/
+
+export function createProjectMetadata(
+  projectName: string,
+  overrides: ProjectMetadataOverrides = {},
+): ProjectMetadata {
   const directoryName = projectName.trim()
   validateDirectoryName(directoryName)
 
@@ -34,28 +41,30 @@ export function createProjectMetadata(projectName: string): ProjectMetadata {
     throw new CreateMyrnAppError('Project name must include at least one alphanumeric character.')
   }
 
-  const packageName = words.map((word) => word.toLowerCase()).join('-')
-  const validation = validatePackageName(packageName)
+  const slug = words.map((word) => word.toLowerCase()).join('-')
+  const validation = validatePackageName(slug)
   if (!validation.validForNewPackages) {
-    throw new CreateMyrnAppError(`"${projectName}" cannot be converted into a valid package name.`, {
+    throw new CreateMyrnAppError(`"${projectName}" cannot be converted into a valid slug.`, {
       suggestion: 'Use letters, numbers, dashes, or underscores in the project name.',
     })
   }
 
-  const displayName = /[-_]/.test(directoryName)
+  const appName = /[-_]/.test(directoryName)
     ? words.map(capitalize).join(' ')
     : directoryName
   const nativeIdentifier = toNativeIdentifier(words)
+  const packageName = overrides.packageName?.trim() || `com.${nativeIdentifier}`
+  const bundleId = overrides.bundleId?.trim() || packageName
+
+  validateReverseDnsIdentifier(packageName, 'package name')
+  validateReverseDnsIdentifier(bundleId, 'bundle identifier')
 
   return {
     directoryName,
+    appName,
+    slug,
     packageName,
-    displayName,
-    expoName: displayName,
-    expoSlug: packageName,
-    expoScheme: packageName,
-    androidPackageName: `com.${nativeIdentifier}`,
-    iosBundleIdentifier: `com.${nativeIdentifier}`,
+    bundleId,
   }
 }
 
@@ -104,4 +113,12 @@ function toNativeIdentifier(words: string[]): string {
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
+}
+
+function validateReverseDnsIdentifier(value: string, label: string): void {
+  if (!REVERSE_DNS_IDENTIFIER_PATTERN.test(value)) {
+    throw new CreateMyrnAppError(`Invalid ${label}: "${value}".`, {
+      suggestion: `Use a reverse-DNS identifier like "com.example.app" for the ${label}.`,
+    })
+  }
 }
