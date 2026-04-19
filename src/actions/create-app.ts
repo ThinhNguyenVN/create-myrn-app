@@ -223,7 +223,9 @@ function normalizeCreateError(error: unknown): CreateMyrnAppError {
 }
 
 function printNextSteps(projectName: string, startCommand: string): void {
-  const changeDirectoryCommand = chalk.cyan(`cd ${projectName}`)
+  const smokeTestDisplayDirectory = process.env.CREATE_MYRN_APP_DISPLAY_DIR?.trim()
+  const changeDirectoryTarget = smokeTestDisplayDirectory || projectName
+  const changeDirectoryCommand = chalk.cyan(`cd ${changeDirectoryTarget}`)
   const startAppCommand = chalk.cyan(startCommand)
   const runAndroidCommand = chalk.cyan('npx expo run:android')
   const runIosCommand = chalk.cyan('npx expo run:ios')

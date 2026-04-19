@@ -16,6 +16,10 @@ async function main() {
 
   await execa('node', [cliPath, 'create-myrn-app-smoke', ...forwardedArgs], {
     cwd: smokeRootDirectory,
+    env: {
+      ...process.env,
+      CREATE_MYRN_APP_DISPLAY_DIR: path.join('.smoke-test', 'create-myrn-app-smoke'),
+    },
     stdio: 'inherit',
   })
 }
