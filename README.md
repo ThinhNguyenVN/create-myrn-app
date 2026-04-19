@@ -103,7 +103,7 @@ npm run smoke:test
 The smoke test creates the generated project in:
 
 ```bash
-/tmp/create-myrn-app-smoke
+.smoke-test/create-myrn-app-smoke
 ```
 
 Smoke test with custom identifiers:

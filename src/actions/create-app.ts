@@ -30,6 +30,7 @@ export async function createApp(projectName: string, options: CreateAppOptions =
   const metadata = createProjectMetadata(projectName, options)
   const targetDirectory = path.resolve(process.cwd(), metadata.directoryName)
   const targetState = await ensureTargetDirectory(targetDirectory)
+  const displayProjectDirectory = resolveDisplayProjectDirectory(targetDirectory)
 
   logger.start(`Creating ${chalk.cyan(metadata.directoryName)} from the MyRN template...`)
 
@@ -50,7 +51,7 @@ export async function createApp(projectName: string, options: CreateAppOptions =
     })
 
     logger.success(`Project ${chalk.cyan(metadata.directoryName)} is ready.`)
-    printNextSteps(metadata.directoryName, getStartCommand(packageManager))
+    printNextSteps(displayProjectDirectory, getStartCommand(packageManager))
   } catch (error) {
     await cleanupOnFailure(targetDirectory, targetState.existedBefore)
     throw normalizeCreateError(error)
@@ -236,4 +237,14 @@ function printNextSteps(projectName: string, startCommand: string): void {
   console.log(`  ${runAndroidCommand}`)
   console.log(`  ${runIosCommand}`)
   console.log()
+}
+
+function resolveDisplayProjectDirectory(targetDirectory: string): string {
+  const smokeTestRoot = path.resolve(process.cwd(), '.smoke-test')
+
+  if (targetDirectory.startsWith(`${smokeTestRoot}${path.sep}`)) {
+    return path.relative(process.cwd(), targetDirectory)
+  }
+
+  return path.basename(targetDirectory)
 }
