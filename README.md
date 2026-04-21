@@ -151,6 +151,7 @@ It:
 - verifies npm authentication with `npm whoami`
 - blocks the publish if the bumped version already exists on npm
 - publishes to npm
+- ensures a `v<version>` git tag exists for the published release
 - pushes the version commit and git tag back to `main`
 
 ### Required setup
