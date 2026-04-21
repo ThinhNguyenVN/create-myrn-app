@@ -25,6 +25,7 @@ jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
+    if: github.ref_name == 'main'
 
     steps:
       - name: Checkout repository
@@ -53,9 +54,24 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      - name: Verify npm authentication
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm whoami
+
       - name: Bump package version
         run: |
           npm version "${{ inputs.version_bump }}" -m "chore: release %s"
+
+      - name: Prevent publishing an existing version
+        run: |
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED_VERSION=$(npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version 2>/dev/null || true)
+          if [ "${PUBLISHED_VERSION}" = "${PACKAGE_VERSION}" ]; then
+            echo "Version ${PACKAGE_VERSION} is already published for ${PACKAGE_NAME}."
+            exit 1
+          fi
 
       - name: Publish package to npm
         env:

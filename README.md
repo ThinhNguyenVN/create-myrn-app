@@ -141,12 +141,15 @@ npm publish
 
 ## GitHub Actions publish workflow
 
-The repository includes a manual GitHub Actions workflow named `Publish to npm`.
+The repository includes a manual GitHub Actions workflow named `Publish Package`.
 
 It:
 - lets you choose `patch`, `minor`, or `major`
+- only allows publishing from the `main` branch
 - runs `npm version <level>`
 - builds and validates the package
+- verifies npm authentication with `npm whoami`
+- blocks the publish if the bumped version already exists on npm
 - publishes to npm
 - pushes the version commit and git tag back to `main`
 
@@ -166,9 +169,10 @@ The token should be an npm access token with permission to publish the `create-m
 ### How to use it
 
 1. Open **Actions** in GitHub
-2. Select **Publish to npm**
+2. Select **Publish Package**
 3. Click **Run workflow**
-4. Choose one of:
+4. Make sure the branch selector is set to `main`
+5. Choose one of:
    - `patch`
    - `minor`
    - `major`
