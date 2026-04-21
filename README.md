@@ -138,3 +138,37 @@ Then publish:
 ```bash
 npm publish
 ```
+
+## GitHub Actions publish workflow
+
+The repository includes a manual GitHub Actions workflow named `Publish to npm`.
+
+It:
+- lets you choose `patch`, `minor`, or `major`
+- runs `npm version <level>`
+- builds and validates the package
+- publishes to npm
+- pushes the version commit and git tag back to `main`
+
+### Required setup
+
+Create this repository secret in GitHub:
+
+- `NPM_TOKEN`
+
+The token should be an npm access token with permission to publish the `create-myrn-app` package.
+
+### Recommended repository settings
+
+- allow GitHub Actions to create and approve pull requests if your repo policy requires it
+- keep the default `GITHUB_TOKEN` permission for `contents: write` so the workflow can push the version commit and tag
+
+### How to use it
+
+1. Open **Actions** in GitHub
+2. Select **Publish to npm**
+3. Click **Run workflow**
+4. Choose one of:
+   - `patch`
+   - `minor`
+   - `major`
