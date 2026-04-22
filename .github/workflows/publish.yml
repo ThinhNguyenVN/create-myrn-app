@@ -81,7 +81,15 @@ jobs:
       - name: Publish package to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --provenance
+        run: npm publish --access public --provenance
+
+      - name: Ensure release tag exists
+        run: |
+          if git rev-parse "${PACKAGE_TAG}" >/dev/null 2>&1; then
+            echo "Tag ${PACKAGE_TAG} already exists locally."
+          else
+            git tag "${PACKAGE_TAG}"
+          fi
 
       - name: Ensure release tag exists
         run: |
@@ -95,3 +103,23 @@ jobs:
         run: |
           git push origin HEAD:main
           git push origin "${PACKAGE_TAG}"
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${PACKAGE_TAG}" \
+            --title "${PACKAGE_TAG}" \
+            --generate-notes \
+            --verify-tag
+
+      - name: Write release link to job summary
+        run: |
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/${PACKAGE_TAG}"
+          {
+            echo "## Publish complete"
+            echo
+            echo "- Version: ${PACKAGE_VERSION}"
+            echo "- Tag: ${PACKAGE_TAG}"
+            echo "- Release: ${RELEASE_URL}"
+          } >> "$GITHUB_STEP_SUMMARY"
