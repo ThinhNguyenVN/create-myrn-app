@@ -92,16 +92,15 @@ jobs:
           echo "workflow_ref=${{ github.workflow_ref }}"
           echo "workflow_sha=${{ github.workflow_sha }}"
 
-      - name: Enforce tokenless Trusted Publishing
+      - name: Verify OIDC token availability
         run: |
-          unset NODE_AUTH_TOKEN
-          unset NPM_TOKEN
-          rm -f "$HOME/.npmrc"
-          echo "Enforcing OIDC Trusted Publishing (no npm token)."
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || [ -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]; then
+            echo "OIDC token endpoint is unavailable. Ensure 'permissions: id-token: write' is set for this job."
+            exit 1
+          fi
+          echo "OIDC token endpoint is available."
 
       - name: Publish package to npm
-        env:
-          NODE_AUTH_TOKEN: ""
         run: npm publish --access public --provenance
 
       - name: Commit release version and create tag
