@@ -73,6 +73,25 @@ jobs:
             exit 1
           fi
 
+      - name: Debug Trusted Publishing context
+        run: |
+          {
+            echo "## Trusted Publishing context"
+            echo
+            echo "- repository: ${{ github.repository }}"
+            echo "- ref_name: ${{ github.ref_name }}"
+            echo "- actor: ${{ github.actor }}"
+            echo "- workflow: ${{ github.workflow }}"
+            echo "- workflow_ref: ${{ github.workflow_ref }}"
+            echo "- workflow_sha: ${{ github.workflow_sha }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "repository=${{ github.repository }}"
+          echo "ref_name=${{ github.ref_name }}"
+          echo "actor=${{ github.actor }}"
+          echo "workflow=${{ github.workflow }}"
+          echo "workflow_ref=${{ github.workflow_ref }}"
+          echo "workflow_sha=${{ github.workflow_sha }}"
+
       - name: Publish package to npm
         run: npm publish --access public --provenance
 
