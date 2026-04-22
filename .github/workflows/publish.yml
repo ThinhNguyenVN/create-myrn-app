@@ -54,14 +54,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Verify npm authentication
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm whoami
-
       - name: Bump package version
         run: |
-          npm version "${{ inputs.version_bump }}" -m "chore: release %s"
+          npm version "${{ inputs.version_bump }}" --no-git-tag-version
 
       - name: Capture release version and tag
         run: |
@@ -79,25 +74,13 @@ jobs:
           fi
 
       - name: Publish package to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public --provenance
 
-      - name: Ensure release tag exists
+      - name: Commit release version and create tag
         run: |
-          if git rev-parse "${PACKAGE_TAG}" >/dev/null 2>&1; then
-            echo "Tag ${PACKAGE_TAG} already exists locally."
-          else
-            git tag "${PACKAGE_TAG}"
-          fi
-
-      - name: Ensure release tag exists
-        run: |
-          if git rev-parse "${PACKAGE_TAG}" >/dev/null 2>&1; then
-            echo "Tag ${PACKAGE_TAG} already exists locally."
-          else
-            git tag "${PACKAGE_TAG}"
-          fi
+          git add package.json package-lock.json
+          git commit -m "chore: release ${PACKAGE_VERSION}"
+          git tag "${PACKAGE_TAG}"
 
       - name: Push version commit and tag
         run: |
@@ -123,3 +106,9 @@ jobs:
             echo "- Tag: ${PACKAGE_TAG}"
             echo "- Release: ${RELEASE_URL}"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Roll back local release changes on failure
+        if: failure()
+        run: |
+          git reset --hard HEAD
+          git tag -d "${PACKAGE_TAG}" 2>/dev/null || true
