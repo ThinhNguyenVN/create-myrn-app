@@ -5,7 +5,7 @@
   "type": "module",
   "main": "./dist/cli.js",
   "bin": {
-    "create-myrn-app": "./dist/cli.js"
+    "create-myrn-app": "dist/cli.js"
   },
   "files": [
     "dist"
