@@ -4,7 +4,9 @@
   "description": "Bootstrap a React Native project from the MyRN template.",
   "type": "module",
   "main": "./dist/cli.js",
-  "bin": "dist/cli.js",
+  "bin": {
+    "create-myrn-app": "./dist/cli.js"
+  },
   "files": [
     "dist"
   ],
