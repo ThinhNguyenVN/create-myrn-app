@@ -92,7 +92,16 @@ jobs:
           echo "workflow_ref=${{ github.workflow_ref }}"
           echo "workflow_sha=${{ github.workflow_sha }}"
 
+      - name: Enforce tokenless Trusted Publishing
+        run: |
+          unset NODE_AUTH_TOKEN
+          unset NPM_TOKEN
+          rm -f "$HOME/.npmrc"
+          echo "Enforcing OIDC Trusted Publishing (no npm token)."
+
       - name: Publish package to npm
+        env:
+          NODE_AUTH_TOKEN: ""
         run: npm publish --access public --provenance
 
       - name: Commit release version and create tag
