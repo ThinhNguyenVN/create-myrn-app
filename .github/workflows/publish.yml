@@ -91,6 +91,14 @@ jobs:
             git tag "${PACKAGE_TAG}"
           fi
 
+      - name: Ensure release tag exists
+        run: |
+          if git rev-parse "${PACKAGE_TAG}" >/dev/null 2>&1; then
+            echo "Tag ${PACKAGE_TAG} already exists locally."
+          else
+            git tag "${PACKAGE_TAG}"
+          fi
+
       - name: Push version commit and tag
         run: |
           git push origin HEAD:main
