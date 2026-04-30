@@ -26,6 +26,11 @@ interface TemplateConfigJson {
   [key: string]: unknown
 }
 
+interface PackageJson {
+  name?: string
+  [key: string]: unknown
+}
+
 export async function createApp(projectName: string, options: CreateAppOptions = {}): Promise<void> {
   const metadata = createProjectMetadata(projectName, options)
   const targetDirectory = path.resolve(process.cwd(), metadata.directoryName)
@@ -100,6 +105,15 @@ async function updateProjectConfiguration(
   templateConfig.packageName = metadata.appId
   templateConfig.bundleId = metadata.appId
   await writeJsonFile(templateConfigPath, templateConfig)
+
+  const packageJsonPath = path.join(targetDirectory, 'package.json')
+  if (!(await pathExists(packageJsonPath))) {
+    throw new CreateMyrnAppError('The template is missing package.json.')
+  }
+
+  const packageJson = await readJsonFile<PackageJson>(packageJsonPath)
+  packageJson.name = metadata.slug
+  await writeJsonFile(packageJsonPath, packageJson)
 
   logger.success('Project configuration updated.')
 }
