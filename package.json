@@ -1,6 +1,6 @@
 {
   "name": "create-myrn-app",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Bootstrap a React Native project from the MyRN template.",
   "type": "module",
   "main": "./dist/cli.js",
